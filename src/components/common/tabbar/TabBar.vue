@@ -11,9 +11,8 @@
 </script>
 
 <style scoped>
-  #tab-bar {
+    #tab-bar {
     /* 本身的样式 */
-    width: 100%;
     background-color: #f6f6f6;
     height: 49px;
     border-top: 1px solid #eee;
@@ -24,6 +23,7 @@
     left: 0;
     right: 0;
     bottom: 0;
+    z-index: 10;
 
     /* 利用flex进行布局 */
     display: flex;

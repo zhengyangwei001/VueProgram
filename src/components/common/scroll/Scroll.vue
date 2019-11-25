@@ -16,6 +16,10 @@ export default {
       type:Number,
       default:0
     },
+    pullUpLoad:{
+      type:Boolean,
+      default:false
+    }
    
   },
   data () {
@@ -33,19 +37,22 @@ export default {
     this.scroll.on('scroll',(position) => {
       this.$emit('scroll',position)
     })
-
+    this.scroll.on('pullingUp',() =>{
+      this.$emit('pullingUp')
+    })
     
   },
   methods: {
      scrollTo(x,y,time=300){
-      this.scroll.scrollTo(x,y,time);
+      this.scroll && this.scroll.scrollTo && this.scroll.scrollTo(x,y,time);
     },
     finishPullUp(){
-      this.scroll.finishPullUp();
+      this.scroll && this.scroll.scrollTo && this.scroll.finishPullUp();
     },
     refresh(){
-      this.scroll.refresh();
-    }
+      this.scroll && this.scroll.scrollTo && this.scroll.refresh();
+    },
+   
   }
 }
 </script>

@@ -4,7 +4,7 @@
       <div slot="center">购物街</div>
     </nav-bar>
     <scroll class="content" ref="scroll" :probe-type="3" @scroll="contentScroll" 
-    :pull-up-load="true">
+    :pull-up-load="true" @pullingUp="loadMore">
       <home-swiper :banners="banners"></home-swiper>
       <recommend-view :recommends="recommends"></recommend-view>
       <feature-view></feature-view>
@@ -27,6 +27,7 @@
   import BackTop from 'components/content/backTop/BackTop'
 
   import {getHomeMultidata,getHomeGoods} from 'network/home'
+  import {debounce} from 'common/utils'
   
 
   export default {
@@ -63,13 +64,18 @@
       this.getHomeGoods('pop');
       this.getHomeGoods('new');
       this.getHomeGoods('sell');
+    },
+    mounted(){
+
+      const refresh = debounce(this.$refs.scroll.refresh,500)
 
       this.$bus.$on('itemImageLoad',() =>{
-        this.$refs.scroll.refresh()
+        refresh()            
       })
     },
     
     methods: {
+      
       /*
       事件监听
       */
@@ -85,6 +91,9 @@
             this.currentType = 'sell'
             break
        }
+     },
+     loadMore(){
+       this.getHomeGoods(this.currentType)
      },
 
      backClick(){
@@ -111,6 +120,7 @@
         getHomeGoods(type,page).then(res =>{
           this.goods[type].list.push(...res.data.list)
           this.goods[type].page += 1
+          this.$refs.scroll.finishPullUp()
          })
        }
       },

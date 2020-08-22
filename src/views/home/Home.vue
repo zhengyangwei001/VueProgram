@@ -3,12 +3,15 @@
     <nav-bar class="home-nav">
       <div slot="center">购物街</div>
     </nav-bar>
+     <tab-control ref="tabControl1" class="tab-control" :titles="['流行','新款','精选']" @tabClick="tabClick"
+     v-show="isTabFixed"></tab-control>
     <scroll class="content" ref="scroll" :probe-type="3" @scroll="contentScroll" 
     :pull-up-load="true" @pullingUp="loadMore">
-      <home-swiper :banners="banners"></home-swiper>
+      <home-swiper :banners="banners" @homeSwiperLoad="homeSwiperLoad"></home-swiper>
       <recommend-view :recommends="recommends"></recommend-view>
       <feature-view></feature-view>
-      <tab-control class="tab-control" :titles="['流行','新款','精选']" @tabClick="tabClick"></tab-control>
+      <tab-control ref="tabControl2" :titles="['流行','新款','精选']" @tabClick="tabClick"
+      :class="{fixed:isTabFixed }" v-show="!isTabFixed"></tab-control>
       <goods-list :goods="goods[currentType].list"></goods-list>
     </scroll>
     <back-top @click.native="backClick" v-show="isShowBackTop"></back-top>
@@ -27,7 +30,7 @@
   import BackTop from 'components/content/backTop/BackTop'
 
   import {getHomeMultidata,getHomeGoods} from 'network/home'
-  import {debounce} from 'common/utils'
+  import {debouce} from 'common/utils'
   
 
   export default {
@@ -53,6 +56,9 @@
         },
         currentType:'pop',
         isShowBackTop:false,
+        tabOffsetTop:0,
+        isTabFixed:false,
+        saveY:0,
 
       }
     },
@@ -65,9 +71,19 @@
       this.getHomeGoods('new');
       this.getHomeGoods('sell');
     },
+    activated(){
+      this.$refs.scroll.scrollTo(0,this.saveY)
+      this.$refs.scroll.refresh()
+    },
+    deactivated(){
+      this.saveY = this.$refs.scroll.getscrollY()
+    },
+
+
+
     mounted(){
 
-      const refresh = debounce(this.$refs.scroll.refresh,500)
+      const refresh = debouce(this.$refs.scroll.refresh,500)
 
       this.$bus.$on('itemImageLoad',() =>{
         refresh()            
@@ -75,6 +91,10 @@
     },
     
     methods: {
+      homeSwiperLoad(){
+       this.tabOffsetTop = this.$refs.tabControl2.$el.offsetTop
+       
+      },
       
       /*
       事件监听
@@ -91,6 +111,8 @@
             this.currentType = 'sell'
             break
        }
+       this.$refs.tabControl1.currentIndex = index
+       this.$refs.tabControl2.currentIndex = index
      },
      loadMore(){
        this.getHomeGoods(this.currentType)
@@ -102,6 +124,7 @@
 
      contentScroll(position){
        this.isShowBackTop = (-position.y) > 1000
+       this.isTabFixed = (-position.y) > (this.tabOffsetTop)
      },
 
     
@@ -118,6 +141,7 @@
       getHomeGoods(type){
         const page = this.goods[type].page+1;
         getHomeGoods(type,page).then(res =>{
+          console.log(res)
           this.goods[type].list.push(...res.data.list)
           this.goods[type].page += 1
           this.$refs.scroll.finishPullUp()
@@ -129,6 +153,12 @@
 </script>
 
 <style scoped>
+.fixed{
+   position: fixed;
+   left: 0;
+   right: 0;
+   top: 0px;
+}
  #home{
    /* padding-top: 44px; */
    height: 100vh;
@@ -137,20 +167,18 @@
    background-color: var(--color-tint);
    color: #ffffff;
 
-   position: fixed;
+   /* position: fixed;
    left: 0;
    right: 0;
    top: 0;
-   z-index: 9;
-  }
-  .tab-control{
-    position: sticky;
-    top: 44px;
+   z-index: 9; */
   }
   .content{
     height: calc(100% - 93px);
-    margin-top: 44px;
-
     overflow: hidden;
+  }
+  .tab-control{
+    position: relative;
+    z-index: 9;
   }
 </style>
